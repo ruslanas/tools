@@ -15,19 +15,17 @@
 
 int main(int argc, char* argv[]) {
 
-	if(argc < 2) {
-		printf("Usage: hx <file> [-n lines]\n");
-		return 0;
-	}
-
-	long num_lines = 31, c;
+	long num_lines = 31, c, page = 0;
 
 	opterr = 0;
 	char *end;
-	while((c=getopt(argc, argv, "n:"))!= -1) {
+	while((c=getopt(argc, argv, "p:n:"))!= -1) {
 		switch(c) {
 			case 'n':
 				num_lines = strtol(optarg, &end, 10) - 1;
+				break;
+			case 'p':
+				page = strtol(optarg, &end, 10);
 				break;
 
 			case '?':
@@ -41,6 +39,11 @@ int main(int argc, char* argv[]) {
 
 
 	FILE* fp;
+	if(optind >= argc) {
+		printf("Usage: hx [-n lines|-p page] <file>\n");
+		printf("hx(c) 2015 Ruslanas Balciunas");
+		return 1;
+	}
 	fp = fopen(argv[optind], "rb");
 
 	if(!fp) {
@@ -48,6 +51,7 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
+	fseek(fp, page * 32 * 16, SEEK_SET);
 	unsigned char buff[1024];
 
 	int line = 0, k = 0, len;
