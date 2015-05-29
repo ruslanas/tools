@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <string.h>
+#include <math.h>
 
 int main(int argc, char* argv[]) {
 
@@ -29,7 +30,6 @@ int main(int argc, char* argv[]) {
 				break;
 			case 'l':
 				page = floor(strtol(optarg, &end, 16) / (32 * 16));
-				printf("Page: %d\n", page);
 				break;
 
 			case '?':
@@ -44,8 +44,8 @@ int main(int argc, char* argv[]) {
 
 	FILE* fp;
 	if(optind >= argc) {
-		printf("Usage: hx [-n lines|-p page] <file>\n");
-		printf("hx(c) 2015 Ruslanas Balciunas");
+		printf("Usage: hx [-n lines] [-p page] [-l address] <file>\n");
+		printf("hx (c) 2015 Ruslanas Balciunas");
 		return 1;
 	}
 	fp = fopen(argv[optind], "rb");
@@ -61,6 +61,8 @@ int main(int argc, char* argv[]) {
 	unsigned long line = 0, k = 0, len;
 	char str[16] = {'\0'};
 
+	printf("File: %s\nPage: %ld\n\n", argv[optind], page);
+    
 	while(((len = fread(&buff, 1, sizeof(buff), fp)) > 0)
 		&& ((num_lines == 0) || (line < num_lines))) {
 
@@ -69,7 +71,7 @@ int main(int argc, char* argv[]) {
 		for(i=0;i<len;i++) {
 
 			if(i % 16 == 0) {
-				printf("%08x: ", (page * 32 + line) * 16);
+				printf("%08lx: ", (page * 32 + line) * 16);
 			}
 			
 			unsigned char cc = buff[i];
