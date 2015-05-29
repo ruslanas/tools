@@ -15,11 +15,11 @@
 
 int main(int argc, char* argv[]) {
 
-	long num_lines = 31, c, page = 0;
+	unsigned long num_lines = 31, c, page = 0;
 
 	opterr = 0;
 	char *end;
-	while((c=getopt(argc, argv, "p:n:"))!= -1) {
+	while((c=getopt(argc, argv, "l:p:n:"))!= -1) {
 		switch(c) {
 			case 'n':
 				num_lines = strtol(optarg, &end, 10) - 1;
@@ -27,10 +27,14 @@ int main(int argc, char* argv[]) {
 			case 'p':
 				page = strtol(optarg, &end, 10);
 				break;
+			case 'l':
+				page = floor(strtol(optarg, &end, 16) / (32 * 16));
+				printf("Page: %d\n", page);
+				break;
 
 			case '?':
-				if(optopt == 'n')
-					printf("Argument required for -n\n");
+				if(optopt == 'n' || optopt == 'l')
+					printf("Argument required for `-%c'\n", optopt);
 				else 
 					printf("Unknown option `-%c'\n", optopt);
 				return 1;
@@ -52,15 +56,21 @@ int main(int argc, char* argv[]) {
 	}
 
 	fseek(fp, page * 32 * 16, SEEK_SET);
-	unsigned char buff[1024];
+	unsigned char buff[512];
 
-	int line = 0, k = 0, len;
+	unsigned long line = 0, k = 0, len;
 	char str[16];
 
-	while(((len = fread(&buff, 1, sizeof(buff), fp)) > 0) && (line < num_lines)) {
+	while(((len = fread(&buff, 1, sizeof(buff), fp)) > 0)
+		&& ((num_lines == 0) || (line < num_lines))) {
+
 		int i;
 
 		for(i=0;i<len;i++) {
+
+			if(i % 16 == 0) {
+				printf("%08x: ", (page * 32 + line) * 16);
+			}
 			
 			unsigned char cc = buff[i];
 			printf("%02X ", cc);
