@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
 	unsigned char buff[512];
 
 	unsigned long line = 0, k = 0, len;
-	char str[16];
+	char str[16] = {'\0'};
 
 	while(((len = fread(&buff, 1, sizeof(buff), fp)) > 0)
 		&& ((num_lines == 0) || (line < num_lines))) {
