@@ -1,5 +1,7 @@
 /*
- * hx
+ * hx - Command line hex viewer
+ *
+ * Usage examples: hx -n0 file.exe
  *
  * @author Ruslanas Balciunas <ruslanas.com@gmail.com>
  * (c) 2015
@@ -13,6 +15,8 @@
 #include <ctype.h>
 #include <string.h>
 #include <math.h>
+
+#define READ_BUFF_SIZE 1024
 
 int main(int argc, char* argv[]) {
 
@@ -56,7 +60,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	fseek(fp, page * 32 * 16, SEEK_SET);
-	unsigned char buff[512];
+	unsigned char buff[READ_BUFF_SIZE];
 
 	unsigned long line = 0, k = 0, len;
 	char str[16] = {'\0'};
