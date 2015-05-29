@@ -43,6 +43,11 @@ int main(int argc, char* argv[]) {
 	FILE* fp;
 	fp = fopen(argv[optind], "rb");
 
+	if(!fp) {
+		printf("Could not read file %s\n", argv[optind]);
+		return 1;
+	}
+
 	unsigned char buff[1024];
 
 	int line = 0, k = 0, len;
