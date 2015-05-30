@@ -15,6 +15,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <math.h>
+#include <errno.h>
 
 #define READ_BUFF_SIZE 1024
 
@@ -49,13 +50,18 @@ int main(int argc, char* argv[]) {
 	FILE* fp;
 	if(optind >= argc) {
 		printf("Usage: hx [-n lines] [-p page] [-l address] <file>\n");
-		printf("hx (c) 2015 Ruslanas Balciunas");
 		return 1;
 	}
 	fp = fopen(argv[optind], "rb");
 
 	if(!fp) {
-		printf("Could not read file %s  [errno: %d]\n", argv[optind], errno);
+		switch(errno) {
+			case EACCES:
+				printf("Permission denied.\n");
+				break;
+			default:
+				printf("Could not read file `%s' [errno: %d]\n", argv[optind], errno);
+		}
 		return 1;
 	}
 
