@@ -9,3 +9,7 @@ scan: scan.c
 
 hx: hx.c
 	$(CC) $(CFLAGS) hx.c -o bin/hx.exe
+
+parser: parser.c
+	$(CC) $(CFLAGS) parser.c -o bin/parser.exe
+
