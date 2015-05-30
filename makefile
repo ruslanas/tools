@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS = -Wall -s -O3
-TARGET = scan hx
+TARGET = scan pe hx
 
 all: $(TARGET)
 
@@ -9,3 +9,8 @@ scan: scan.c
 
 hx: hx.c
 	$(CC) $(CFLAGS) hx.c -o bin/hx.exe
+
+pe: pe.c types.h
+	$(CC) $(CFLAGS) pe.c types.h -o bin/pe.exe
+
+
