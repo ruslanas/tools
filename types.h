@@ -99,7 +99,7 @@ typedef struct SectionDescriptor {
 
 // IMAGE_IMPORT_DESCRIPTOR
 typedef struct ImportDirectoryTableEntry {
-    _ANONYMOUS_UNION union {
+    union {
         long Characteristics;
         long LookupTableRva;
     } UNION;
