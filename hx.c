@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
 	fp = fopen(argv[optind], "rb");
 
 	if(!fp) {
-		printf("Could not read file %s\n", argv[optind]);
+		printf("Could not read file %s  [errno: %d]\n", argv[optind], errno);
 		return 1;
 	}
 
