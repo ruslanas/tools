@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS = -Wall -s -O3
-TARGET = scan hx
+TARGET = scan pe hx
 
 all: $(TARGET)
 
@@ -12,4 +12,8 @@ hx: hx.c
 
 parser: parser.c
 	$(CC) $(CFLAGS) parser.c -o bin/parser.exe
+
+pe: pe.c types.h
+	$(CC) $(CFLAGS) pe.c types.h -o bin/pe.exe
+
 
