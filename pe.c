@@ -11,6 +11,7 @@ PE analyzer
 #include <windows.h>
 
 #include "types.h"
+#include "functions.c"
 
 const char *subsystem[] = {
     "n/a",
@@ -23,28 +24,6 @@ const char *subsystem[] = {
     "POSIX"
 };
 
-
-#define MAX_SYMBOL_LENGTH 256
-
-uint16_t print_import_address_table(FILE* ptr_file) {
-    uint16_t hint;
-    fread(&hint, sizeof(uint16_t), 1, ptr_file);
-    char buff[MAX_SYMBOL_LENGTH];
-    int i = 0;
-    char c = 'A';
-
-    do {
-        c = fgetc(ptr_file);
-        buff[i] = c;
-        i++;
-    } while(c != '\0' && i < sizeof(buff));
-
-    if(i % 2 != 0) {
-        fgetc(ptr_file);
-    }
-    printf("0x%08x %s\n", hint, buff);
-    return hint;
-}
 
 int main(int argc, char* argv[]) {
 
@@ -68,12 +47,10 @@ int main(int argc, char* argv[]) {
 
     SYSTEM_INFO si;
     GetSystemInfo(&si);
+
     printf("Memory page size: %ld\n", si.dwPageSize);
     printf("Processor type: %ld\n", si.dwProcessorType);
     printf("Processors: %ld\n", si.dwNumberOfProcessors);
-
-    printf("\nDOS header\n");
-    printf("---------------------------------------------------------\n");
 
     IMAGE_DOS_HEADER header;
 
@@ -84,109 +61,62 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    printf("Magic:\t\t\t\t 0x%04x\n", header.e_magic);
-    printf("Bytes on last page:\t\t %d\n", header.e_cblp);
-    printf("Pages:\t\t\t\t %d\n", header.e_cp);
-    printf("Relocations:\t\t\t %d\n", header.e_crlc);
-    printf("Size of header in paragraphs:\t %d\n", header.e_cparhdr);
+    printf("\nDOS header\n");
+    printf("---------------------------------------------------------\n");
 
-    // ...
-
-    printf("Initial SP:\t\t\t 0x%08x\n", header.e_sp);
-    printf("Initial CS:\t\t\t 0x%08x\n", header.e_cs);
-
-    printf("File address of new EXE header:\t %ld\n", header.e_lfanew);
-
+    printDosHeader(&header);
 
     fseek(ptr_file, header.e_lfanew, SEEK_SET);
 
+    COFFHeader coff;
+    fread(&coff, sizeof(coff), 1, ptr_file);
 
     printf("\nPE header\n");
     printf("---------------------------------------------------------\n");
 
-    COFFHeader coff;
-
-    fread(&coff, sizeof(coff), 1, ptr_file);
-
-    printf("Signature:\t\t\t %s\n", coff.Signature);
-
-    if(coff.Machine == 0x14c) {
-        printf("Machine:\t\t\t Intel 386\n");
-    } else {
-        printf("Machine:\t\t\t 0x%04x\n", coff.Machine);
-    }
-
-    printf("Number of sections:\t\t %hu\n", coff.NumberOfSections);
-    printf("TimeStamp:\t\t\t %ld\n", coff.TimeDateStamp);
-
-    printf("Size of optional header:\t %hu\n", coff.SizeOfOptionalHeader);
-    printf("Characteristics:\t\t 0x%04x\n", coff.Characteristics);
-
-
-    printf("\nOptional header (standard fields)\n");
-    printf("---------------------------------------------------------\n");
+    printfCoffHeader(&coff);
 
     PEOptionsHeader options;
     fread(&options, sizeof(options), 1, ptr_file);
 
-    char* peFormat;
+    printf("\nOptional header (standard fields)\n");
+    printf("---------------------------------------------------------\n");
 
-    if(options.signature == 0x10b) {
-        peFormat = "PE32";
-    } else {
-        peFormat = "PE32+";
-    }
-
-    printf("Signature:\t\t\t %s\n", peFormat);
-    printf("Address of entry point:\t\t 0x%lx\n", options.AddressOfEntryPoint);
-    printf("Base of code:\t\t\t %ld\n", options.BaseOfCode);
-
+    printOptionsHeader(&options);
 
     printf("\nOptional header (Windows-specific)\n");
     printf("---------------------------------------------------------\n");
-
-    WindowsOptions windowsOptions;
 
     if(options.signature == 0x20b) {
         // PE32+
         PEOptionsHeaderWindowsPlus pe32Plus;
         fread(&pe32Plus, sizeof(PEOptionsHeaderWindowsPlus), 1, ptr_file);
+        printPe32PlusWindowsSpecificHeader(&pe32Plus);
+        fclose(ptr_file);
+        printf("Can't go further.\n");
+        return 0;
 
-        windowsOptions.OsVersion = pe32Plus.MajorOSVersion;
-        windowsOptions.NumberOfRvaAndSizes = pe32Plus.NumberOfRvaAndSizes;
-        windowsOptions.SectionAlignment = pe32Plus.SectionAlignment;
-        windowsOptions.FileAlignment = pe32Plus.FileAlignment;
-        // quick
-        windowsOptions.ImageBase = (long)pe32Plus.ImageBase;
     } else {
         // PE32
         PEOptionsHeaderWindows pe32;
         fread(&pe32, sizeof(PEOptionsHeaderWindows), 1, ptr_file);
 
-        windowsOptions.OsVersion = pe32.MajorOSVersion;
-        windowsOptions.NumberOfRvaAndSizes = pe32.NumberOfRvaAndSizes;
-        windowsOptions.SectionAlignment = pe32.SectionAlignment;
-        windowsOptions.FileAlignment = pe32.FileAlignment;
-        windowsOptions.ImageBase = pe32.ImageBase;
-    }
+        printPe32WindowsSpecificHeader(&pe32);
 
-    printf("Major OS version:\t\t %hu\n", windowsOptions.OsVersion);
-    printf("Section alignment:\t\t 0x%08lx\n", windowsOptions.SectionAlignment);
-    printf("File alignment:\t\t\t 0x%08lx\n", windowsOptions.FileAlignment);
-    printf("Image base:\t\t\t 0x%08lx\n", windowsOptions.ImageBase);
-    printf("Number of data directories:\t %ld\n", windowsOptions.NumberOfRvaAndSizes);
+        printf("\nData directories\n");
+        printf("---------------------------------------------------------\n");
+        DataDirectory *directory = malloc(pe32.NumberOfRvaAndSizes * sizeof(DataDirectory));
+        fread(directory, sizeof(DataDirectory), pe32.NumberOfRvaAndSizes, ptr_file);
 
+        printf("VA\t\tSize\n");
+        printf("---------------------------------------------------------\n");
 
-    printf("\nData directories\n");
-    printf("---------------------------------------------------------\n");
-    DataDirectory *directory = malloc(windowsOptions.NumberOfRvaAndSizes * sizeof(DataDirectory));
-    fread(directory, sizeof(DataDirectory), windowsOptions.NumberOfRvaAndSizes, ptr_file);
-    int i;
-    printf("VA\t\tSize\n");
-    printf("---------------------------------------------------------\n");
+        int i;
+        for(i=0;i<pe32.NumberOfRvaAndSizes;i++) {
+            printf("0x%08lx\t%ld\n", directory[i].VirtualAddress, directory[i].Size);
+        }
 
-    for(i=0;i<windowsOptions.NumberOfRvaAndSizes;i++) {
-        printf("0x%08lx\t%ld\n", directory[i].VirtualAddress, directory[i].Size);
+        free(directory);
     }
 
     printf("\nSections table\n");
@@ -205,7 +135,7 @@ int main(int argc, char* argv[]) {
     long location = 0;
 
 
-
+    int i;
     for(i=0;i<coff.NumberOfSections;i++) {
 
         if(strcmp(descriptor[i].Name, ".idata") == 0) {
@@ -228,12 +158,7 @@ int main(int argc, char* argv[]) {
         ImportDirectoryTableEntry idtEntry;
         do {
             fread(&idtEntry, sizeof(idtEntry), 1, ptr_file);
-            printf("Lookup Table RVA: 0x%08lx\n", idtEntry.UNION.LookupTableRva);
-            printf("Time stamp: %ld\n", idtEntry.Stamp);
-            printf("Forwarder index: %ld\n", idtEntry.ForwarderIndex);
-            printf("Name RVA: 0x%08lx\n", idtEntry.NameRva);
-            printf("Import Address Table RVA (Thunk table): 0x%08lx\n", idtEntry.AddressTableRva);
-
+            printIdtEntry(&idtEntry);
             printf("----\n");
             importTables++;
         } while(
@@ -252,7 +177,6 @@ int main(int argc, char* argv[]) {
         int cnt = 0;
         do {
             fread(&entry, sizeof(long), 1, ptr_file);
-            //long h = entry & 0x7FFFFFFF;
 
             // anything as second comand argument serves
             // as debug option
@@ -276,7 +200,6 @@ int main(int argc, char* argv[]) {
       hint = print_import_address_table(ptr_file);
     } while(hint != 0);
 
-    free(directory);
     free(descriptor);
     fclose(ptr_file);
 
