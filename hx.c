@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
 			case '?':
 				if(optopt == 'n' || optopt == 'l')
 					printf("Argument required for `-%c'\n", optopt);
-				else 
+				else
 					printf("Unknown option `-%c'\n", optopt);
 				return 1;
 		}
@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
 	char str[16] = {'\0'};
 
 	printf("File: %s\nPage: %ld\n\n", argv[optind], page);
-    
+
 	while(((len = fread(&buff, 1, sizeof(buff), fp)) > 0)
 		&& ((num_lines == 0) || (line < num_lines))) {
 
@@ -83,13 +83,13 @@ int main(int argc, char* argv[]) {
 			if(i % 16 == 0) {
 				printf("%08lx: ", (page * 32 + line) * 16);
 			}
-			
+
 			unsigned char cc = buff[i];
 			printf("%02X ", cc);
 
 			if(isprint(cc)) {
 				str[k % 16] = cc;
-			
+
 			} else {
 				str[k % 16] = '.';
 			}
@@ -112,15 +112,17 @@ int main(int argc, char* argv[]) {
 			}
 		}
 	}
+
 	len = strlen(str);
-        if(len < 16) {
+    if(len < 16) {
 		int shift = 52 - len * 3 - floor(len / 4);
 		while(shift > 0) {
 			printf(" ");
 			shift--;
 		}
-		printf("%s", str);
+		printf("%s\n\n", str);
 	}
+
 	fclose(fp);
 	return 0;
 }
