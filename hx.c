@@ -122,7 +122,6 @@ int main(int argc, char* argv[]) {
 		}
 		printf("%s\n\n", str);
 	}
-
 	fclose(fp);
 	return 0;
 }

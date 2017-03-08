@@ -15,3 +15,6 @@ parser: parser.c
 
 pe: pe.c types.h
 	$(CC) $(CFLAGS) pe.c types.h -o bin/pe.exe
+
+relocate: relocate.c
+	$(CC) $(CFLAGS) relocate.c -o bin/relocate
