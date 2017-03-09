@@ -1,3 +1,7 @@
+#define ELF32_R_SYM(i) ((i) >> 8)
+#define ELF32_R_TYPE(i) ((unsigned char) (i))
+#define ELF32_R_INFO(s,t) (((s)<<8) + (unsigned char)(i))
+
 #define SHT_NULL 0
 #define SHT_PROGBITS 1
 #define SHT_SYMTAB 2
@@ -44,3 +48,16 @@ typedef struct {
     uint32_t r_offset;
     uint32_t r_info;
 } Elf32_Rel;
+
+typedef struct {
+    uint32_t st_name;
+    uint32_t st_value;
+    uint32_t st_size;
+    unsigned char st_info;
+    unsigned char st_other;
+    uint16_t st_shndx;
+} Elf32_Sym;
+
+void display_symtab(Elf32_Shdr *, unsigned char *);
+Elf32_Shdr * get_by_ndx(uint32_t, unsigned char *);
+Elf32_Rel * get_rel_at(uint32_t, unsigned char *);

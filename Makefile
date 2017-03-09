@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS = -Wall -s -O3
-TARGET = hx
+TARGET = hx relocate
 
 all: $(TARGET)
 
