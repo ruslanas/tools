@@ -25,6 +25,7 @@ int main(int argc, char* argv[]) {
 
 	opterr = 0;
 	char *end;
+	long ln = 0;
 	while((c=getopt(argc, argv, "l:p:n:"))!= -1) {
 		switch(c) {
 			case 'n':
@@ -34,7 +35,13 @@ int main(int argc, char* argv[]) {
 				page = strtol(optarg, &end, 10);
 				break;
 			case 'l':
-				page = floor(strtol(optarg, &end, 16) / (32 * 16));
+				// hx -l $((0x0A+0x0B)) file
+				if(strstr(optarg, "0x") == NULL) {
+					ln = strtol(optarg, &end, 10);
+				} else {
+					ln = strtol(optarg, &end, 16);
+				}
+				page = floor(ln / (32 * 16));
 				break;
 
 			case '?':
