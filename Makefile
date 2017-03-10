@@ -18,3 +18,6 @@ pe: pe.c types.h
 
 relocate: relocate.c
 	$(CC) $(CFLAGS) relocate.c -o bin/relocate
+
+run: relocate
+	relocate ../maggot/egg.img ./egg.img
