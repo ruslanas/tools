@@ -6,6 +6,8 @@
 #define ELF32_ST_TYPE(i) ((i)&0xf)
 #define ELF32_ST_INFO(b,t) (((b)<<4)+((t)&0xf))
 
+# define DO_386_PC32(S, A, P)	((S) + (A) - (P))
+
 #define STB_LOCAL 0
 #define STB_GLOBAL 1
 #define STB_WEAK 2
@@ -45,6 +47,7 @@
 #define SHF_EXECINSTR 0x4
 #define SHF_MASKPROC 0xf0000000
 
+#define R_386_NONE 0
 #define R_386_32 1   // S + A
 #define R_386_PC32 2 // S + A - P
 
@@ -98,7 +101,7 @@ Elf32_Rel * get_rel_at(uint32_t, unsigned char *);
 unsigned char * get_strtab(unsigned char *);
 unsigned char * get_sym_name(Elf32_Sym *, unsigned char *);
 Elf32_Sym * get_sym(uint32_t, Elf32_Shdr *, unsigned char *);
-int get_sym_val(Elf32_Sym *, unsigned char *);
+uint32_t get_sym_val(Elf32_Sym *, unsigned char *);
 Elf32_Shdr * get_nth_by_type(int, int, unsigned char *);
 
 void display_symtab(Elf32_Shdr *, unsigned char *);

@@ -1,3 +1,4 @@
 *~
 *.dump
-egg.img
+*.img
+*.log
