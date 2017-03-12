@@ -1,6 +1,6 @@
 #define ELF32_R_SYM(i) ((i) >> 8)
 #define ELF32_R_TYPE(i) ((unsigned char) (i))
-#define ELF32_R_INFO(s,t) (((s)<<8) + (unsigned char)(i))
+#define ELF32_R_INFO(s,t) (((s)<<8) + (unsigned char)(t))
 
 #define ELF32_ST_BIND(i) ((i)>>4)
 #define ELF32_ST_TYPE(i) ((i)&0xf)
@@ -8,9 +8,14 @@
 
 # define DO_386_PC32(S, A, P)	((S) + (A) - (P))
 
+
+#define STN_UNDEF 0
+
 #define STB_LOCAL 0
 #define STB_GLOBAL 1
 #define STB_WEAK 2
+#define STB_LOOS 10
+#define STB_HIOS 12
 #define STB_LOPROC 13
 #define STB_HIPROC 15
 
@@ -99,14 +104,17 @@ Elf32_Ehdr * get_elf_header(unsigned char *);
 Elf32_Shdr * get_by_ndx(uint32_t, unsigned char *);
 Elf32_Rel * get_rel_at(uint32_t, unsigned char *);
 unsigned char * get_strtab(unsigned char *);
-unsigned char * get_sym_name(Elf32_Sym *, unsigned char *);
 Elf32_Sym * get_sym(uint32_t, Elf32_Shdr *, unsigned char *);
 uint32_t get_sym_val(Elf32_Sym *, unsigned char *);
 Elf32_Shdr * get_nth_by_type(int, int, unsigned char *);
+int get_symbol_ndx(Elf32_Rel *);
+int get_relocation_type(Elf32_Rel *);
 
 void display_symtab(Elf32_Shdr *, unsigned char *);
 void print_section_header(Elf32_Shdr *);
-int count_rels(Elf32_Shdr *);
-void print_sym(Elf32_Sym *, unsigned char *);
-
-void relocate(Elf32_Shdr *, Elf32_Rel *, Elf32_Shdr *, unsigned char *);
+int sec_count(Elf32_Shdr *);
+void print_sym(Elf32_Sym *, Elf32_Shdr * symtab, unsigned char *);
+void dump_rel(Elf32_Rel *, Elf32_Shdr *, unsigned char *);
+void relocate(Elf32_Shdr *, unsigned char *);
+unsigned char * symbol_name(Elf32_Sym *, Elf32_Shdr *, unsigned char *);
+uint32_t get_symbol_value(Elf32_Sym *, Elf32_Rel *, unsigned char *);
