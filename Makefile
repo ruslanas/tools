@@ -21,3 +21,6 @@ relocate: relocate.c
 
 run: relocate
 	relocate -r ../maggot/egg.img ./egg.img
+
+extract: extract.c
+	$(CC) $(CFLAGS) extract.c -o bin/extract.exe
