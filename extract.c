@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <errno.h>
@@ -7,6 +8,14 @@
 int isAlphaNum(char);
 int isSpace(char);
 int end(char);
+int getCode(unsigned char *);
+
+unsigned char types[][16] = {
+    "char",
+    "short",
+    "long",
+    "byte"
+};
 
 int main(int argc, char * argv[]) {
     unsigned char map[MAX_LENGTH] = "";
@@ -20,7 +29,7 @@ int main(int argc, char * argv[]) {
         }
     }
 
-    if(strlen((const char *)map) == 0) {
+    if(strlen((const char *)map) == 0 || optind >= argc) {
         printf("Usage: extract -m <mapfile> <image>\n");
         exit(-1);
     }
@@ -72,9 +81,52 @@ int main(int argc, char * argv[]) {
         }
     }
 
+    unsigned char data[1024];
+    fp = fopen(argv[optind], "rb");
+    len = fread(&data, 1, sizeof(data), fp);
+    fclose(fp);
+    unsigned char * ptr = data;
+
     for(int i=0;i<j;i++) {
-        printf("%s\n", tbl[i]);
+        printf("%s:\t", tbl[i]);
+        i+=2;
+        int code = getCode(tbl[i]);
+        int cnt = 1;
+        if(tbl[i+1][0] == '[') {
+            cnt = atoi((const char *)tbl[i+2]);
+            i+=3;
+        }
+        for(int k=0;k<cnt;k++) {
+            switch(code) {
+                case 0:
+                    printf("%c", ((char *)ptr)[0]);
+                    ptr += sizeof(char);
+                    break;
+                case 1:
+                    printf("%u", ((short *)ptr)[0]);
+                    ptr += sizeof(short);
+                    break;
+                case 2:
+                    printf("%08lx", ((long *)ptr)[0]);
+                    ptr += sizeof(long);
+                    break;
+                case 3:
+                    printf("%02x ", ptr[0] & 0xff);
+                    ptr++;
+            }
+        }
+        printf("\n");
     }
+}
+
+int getCode(unsigned char * str) {
+    for(int i=0;i<sizeof(types) / 16;i++) {
+        if(strcmp((const char *)str, (const char *)types[i]) == 0) {
+            return i;
+        }
+    }
+    printf("Type error\n");
+    exit(-1);
 }
 
 int isSpace(char c) {
