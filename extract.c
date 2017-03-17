@@ -2,8 +2,11 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <errno.h>
+#include <stdint.h>
+#include <inttypes.h>
 
 #define MAX_LENGTH 1024
+#define T_SYNCSAFE 4
 
 int isAlphaNum(char);
 int isSpace(char);
@@ -14,7 +17,8 @@ unsigned char types[][16] = {
     "char",
     "short",
     "long",
-    "byte"
+    "byte",
+    "syncsafe"
 };
 
 int main(int argc, char * argv[]) {
@@ -54,11 +58,8 @@ int main(int argc, char * argv[]) {
         if((!isAlphaNum(buff[i]))
             || (isAlphaNum(buff[i]) && b == 0)) {
 
-            if(isAlphaNum(buff[i])) {
-                b = 1;
-            } else {
-                b = 0;
-            }
+            b = isAlphaNum(buff[i]);
+
             // ltrim
             while(isSpace(buff[p]) && (p<MAX_LENGTH)) {
                 p++;
@@ -86,7 +87,6 @@ int main(int argc, char * argv[]) {
     len = fread(&data, 1, sizeof(data), fp);
     fclose(fp);
     unsigned char * ptr = data;
-
     for(int i=0;i<j;i++) {
         printf("%s:\t", tbl[i]);
         i+=2;
@@ -113,6 +113,21 @@ int main(int argc, char * argv[]) {
                 case 3:
                     printf("%02x ", ptr[0] & 0xff);
                     ptr++;
+                    break;
+                case T_SYNCSAFE:
+                {
+                    uint32_t n = (uint32_t)(ptr[3] & 0x7f);
+                    n |= ((uint32_t)(ptr[2] & 0x7f) << 7);
+                    n |= ((uint32_t)(ptr[1] & 0x7f) << 14);
+                    n |= ((uint32_t)(ptr[0] & 0x7f) << 21);
+
+                    printf("%d", n);
+                    ptr += sizeof(uint32_t);
+                    break;
+                }
+                default:
+                    printf("Type unknown!\n");
+                    exit(-1);
             }
         }
         printf("\n");
