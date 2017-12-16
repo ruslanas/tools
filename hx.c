@@ -4,12 +4,13 @@
  * Usage examples: hx -n0 file.exe
  *
  * @author Ruslanas Balciunas <ruslanas.com@gmail.com>
- * (c) 2015
+ * (c) 2015 - 2017
  *
  */
 
 
 #include <stdlib.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <getopt.h>
 #include <ctype.h>
@@ -21,25 +22,27 @@
 
 int main(int argc, char* argv[]) {
 
-	unsigned long num_lines = 31, c, page = 0;
+	unsigned long num_lines = 31;
+	int c;
+	unsigned long long page = 0;
 
 	opterr = 0;
 	char *end;
-	long ln = 0;
+	unsigned long long ln = 0;
 	while((c=getopt(argc, argv, "l:p:n:"))!= -1) {
 		switch(c) {
 			case 'n':
-				num_lines = strtol(optarg, &end, 10) - 1;
+				num_lines = strtoll(optarg, &end, 10) - 1;
 				break;
 			case 'p':
-				page = strtol(optarg, &end, 10);
+				page = strtoll(optarg, &end, 10);
 				break;
 			case 'l':
 				// hx -l $((0x0A+0x0B)) file
 				if(strstr(optarg, "0x") == NULL) {
-					ln = strtol(optarg, &end, 10);
+					ln = strtoll(optarg, &end, 10);
 				} else {
-					ln = strtol(optarg, &end, 16);
+					ln = strtoll(optarg, &end, 16);
 				}
 				page = floor(ln / (32 * 16));
 				break;
@@ -72,13 +75,13 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
-	fseek(fp, page * 32 * 16, SEEK_SET);
+	_fseeki64(fp, page * 32LL * 16LL, SEEK_SET);
 	unsigned char buff[READ_BUFF_SIZE];
 
-	unsigned long line = 0, k = 0, len;
+	unsigned long long line = 0, k = 0, len;
 	char str[16] = {'\0'};
 
-	printf("File: %s\nPage: %ld\n\n", argv[optind], page);
+	printf("File: %s\nPage: %"PRId64"\n\n", argv[optind], page);
 
 	while(((len = fread(&buff, 1, sizeof(buff), fp)) > 0)
 		&& ((num_lines == 0) || (line < num_lines))) {
@@ -88,7 +91,7 @@ int main(int argc, char* argv[]) {
 		for(i=0;i<len;i++) {
 
 			if(i % 16 == 0) {
-				printf("%08lx: ", (page * 32 + line) * 16);
+				printf("%016"PRIX64": ", (page * 32 + line) * 16);
 			}
 
 			unsigned char cc = buff[i];

@@ -2,3 +2,7 @@
 *.dump
 *.img
 *.log
+*.exe
+*.out
+*.map
+.vscode
